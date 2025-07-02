@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>House Remodel Cost Estimator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: auto;
+      max-width: 800px;
+    }
+    h1 {
+      color: #4CAF50;
+      font-size: 1.5em;
+    }
+    label, select, input {
+      display: block;
+      margin: 10px 0;
+      font-size: 1em;
+    }
+    input[type="number"], select, button {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    .output {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      background: #f9f9f9;
+    }
+    .room-input {
+      display: flex;
+      flex-direction: column;
+      margin: 10px 0;
+    }
+    .room-input input.custom-price {
+      width: 100%;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    @media (min-width: 600px) {
+      .room-input {
+        flex-direction: row;
+        align-items: center;
+      }
+      .room-input input[type="number"],
+      .room-input input.custom-price {
+        width: 150px;
+        margin-left: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Remodel Cost Estimator (Austin, TX)</h1>
+
+  <label>ZIP Code (for regional adjustment, not used yet):
+    <input type="text" id="zip">
+  </label>
+
+  <label>Total Square Footage:
+    <input type="number" id="sqft" placeholder="e.g., 2000">
+  </label>
+
+  <label>Finish Level:
+    <select id="finish">
+      <option value="basic">Basic</option>
+      <option value="mid">Mid-range</option>
+      <option value="high">High-end</option>
+    </select>
+  </label>
+
+  <fieldset>
+    <legend>Rooms to Remodel (per sqft)</legend>
+    <div class="room-input">
+      <label><input type="checkbox" value="kitchen" onchange="toggleInput('kitchen')"> Kitchen</label>
+      <input type="number" id="kitchen_sqft" placeholder="sqft" disabled>
+      <input type="number" class="custom-price" id="kitchen_price" placeholder="$/sqft (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="bathroom" onchange="toggleInput('bathroom')"> Bathroom</label>
+      <input type="number" id="bathroom_sqft" placeholder="sqft" disabled>
+      <input type="number" class="custom-price" id="bathroom_price" placeholder="$/sqft (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="flooring" onchange="toggleInput('flooring')"> Flooring</label>
+      <input type="number" id="flooring_sqft" placeholder="sqft" disabled>
+      <input type="number" class="custom-price" id="flooring_price" placeholder="$/sqft (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="living" onchange="toggleInput('living')"> Living Room</label>
+      <input type="number" id="living_sqft" placeholder="sqft" disabled>
+      <input type="number" class="custom-price" id="living_price" placeholder="$/sqft (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="bedroom" onchange="toggleInput('bedroom')"> Bedroom</label>
+      <input type="number" id="bedroom_sqft" placeholder="sqft" disabled>
+      <input type="number" class="custom-price" id="bedroom_price" placeholder="$/sqft (optional)">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Whole-Unit Items (flat cost)</legend>
+    <div class="room-input">
+      <label><input type="checkbox" value="roof" onchange="toggleInput('roof')"> Roof Replacement</label>
+      <input type="number" id="roof_units" placeholder="count (usually 1)" disabled>
+      <input type="number" class="custom-price" id="roof_price" placeholder="$/unit (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="windows" onchange="toggleInput('windows')"> Windows</label>
+      <input type="number" id="windows_units" placeholder="# of windows" disabled>
+      <input type="number" class="custom-price" id="windows_price" placeholder="$/unit (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="waterheater" onchange="toggleInput('waterheater')"> Water Heater</label>
+      <input type="number" id="waterheater_units" placeholder="count" disabled>
+      <input type="number" class="custom-price" id="waterheater_price" placeholder="$/unit (optional)">
+    </div>
+    <div class="room-input">
+      <label><input type="checkbox" value="hvac" onchange="toggleInput('hvac')"> HVAC</label>
+      <input type="number" id="hvac_units" placeholder="count" disabled>
+      <input type="number" class="custom-price" id="hvac_price" placeholder="$/unit (optional)">
+    </div>
+  </fieldset>
+
+  <button onclick="estimateCost()">Estimate Cost</button>
+
+  <div class="output" id="result"></div>
+
+  <script>
+    const costTable = {
+      kitchen:    { basic: 120, mid: 180, high: 300 },
+      bathroom:   { basic: 110, mid: 160, high: 260 },
+      flooring:   { basic: 12,  mid: 18,  high: 30  },
+      living:     { basic: 35,  mid: 55,  high: 80  },
+      bedroom:    { basic: 35,  mid: 55,  high: 80  },
+      roof:       { basic: 9000, mid: 14000, high: 22000 },
+      windows:    { basic: 400,  mid: 700,   high: 1100 },
+      waterheater:{ basic: 1200, mid: 1800,  high: 2700 },
+      hvac:       { basic: 6000, mid: 9000,  high: 13000 },
+    };
+
+    function toggleInput(id) {
+      const checkbox = document.querySelector(`input[value='${id}']`);
+      const input = document.getElementById(`${id}_sqft`) || document.getElementById(`${id}_units`);
+      if (input) input.disabled = !checkbox.checked;
+    }
+
+    function estimateCost() {
+      const finish = document.getElementById("finish").value;
+      const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+      let total = 0;
+      let roomBreakdown = [];
+      let systemBreakdown = [];
+
+      checkboxes.forEach(cb => {
+        const item = cb.value;
+        const isPerSqft = document.getElementById(`${item}_sqft`) !== null;
+        const inputId = isPerSqft ? `${item}_sqft` : `${item}_units`;
+        const customPriceId = `${item}_price`;
+        const value = parseFloat(document.getElementById(inputId).value);
+        const customPrice = parseFloat(document.getElementById(customPriceId).value);
+
+        if (!isNaN(value) && value > 0) {
+          const rate = !isNaN(customPrice) && customPrice > 0 ? customPrice : costTable[item][finish];
+          const cost = rate * value;
+          total += cost;
+          const entry = `${item.charAt(0).toUpperCase() + item.slice(1)}: $${cost.toLocaleString()} (${value} ${isPerSqft ? 'sqft' : 'unit(s)'}, $${rate}/unit)`;
+          if (isPerSqft) {
+            roomBreakdown.push(entry);
+          } else {
+            systemBreakdown.push(entry);
+          }
+        } else {
+          const warning = `${item.charAt(0).toUpperCase() + item.slice(1)}: ⚠️ Please enter valid amount`;
+          if (isPerSqft) {
+            roomBreakdown.push(warning);
+          } else {
+            systemBreakdown.push(warning);
+          }
+        }
+      });
+
+      const resultDiv = document.getElementById("result");
+      if (checkboxes.length === 0) {
+        resultDiv.innerHTML = "<strong>Please select at least one item.</strong>";
+        return;
+      }
+
+      resultDiv.innerHTML = `<strong>Total Estimated Cost: $${total.toLocaleString()}</strong><br><br>`;
+      if (roomBreakdown.length > 0) {
+        resultDiv.innerHTML += `<u>Room-Based Remodels:</u><br>${roomBreakdown.join("<br>")}<br><br>`;
+      }
+      if (systemBreakdown.length > 0) {
+        resultDiv.innerHTML += `<u>Whole-System Replacements:</u><br>${systemBreakdown.join("<br>")}`;
+      }
+    }
+  </script>
+</body>
+</html>
