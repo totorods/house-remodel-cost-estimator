@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>House Remodel Cost Estimator</title>
+  <title>🏡 House Remodel Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,12 +18,12 @@
       color: #4CAF50;
       font-size: 1.5em;
     }
-    label, select, input {
+    label, select, input, textarea {
       display: block;
       margin: 10px 0;
       font-size: 1em;
     }
-    input[type="number"], select, button {
+    input[type="number"], select, button, input[type="text"], textarea {
       width: 100%;
       padding: 10px;
       font-size: 1em;
@@ -33,6 +34,7 @@
       padding: 10px;
       border: 1px solid #ddd;
       background: #f9f9f9;
+      white-space: pre-wrap;
     }
     .room-input {
       display: flex;
@@ -48,6 +50,7 @@
       border: none;
       cursor: pointer;
       font-size: 1em;
+      margin-top: 10px;
     }
     button:hover {
       background-color: #45a049;
@@ -66,17 +69,25 @@
   </style>
 </head>
 <body>
-  <h1>Remodel Cost Estimator (Austin, TX)</h1>
+  <h1>🏡 House Remodel Cost Estimator (Austin, TX)</h1>
 
-  <label>ZIP Code (for regional adjustment, not used yet):
+  <label>📍 Address:
+    <input type="text" id="address" placeholder="Enter street address">
+  </label>
+
+  <label>📮 ZIP Code:
     <input type="text" id="zip">
   </label>
 
-  <label>Total Square Footage:
+  <label>📐 Total Square Footage:
     <input type="number" id="sqft" placeholder="e.g., 2000">
   </label>
 
-  <label>Finish Level:
+  <label>📷 Upload Photo:
+    <input type="file" id="photo" accept="image/*">
+  </label>
+  
+  <label>🎨 Finish Level:
     <select id="finish">
       <option value="basic">Basic</option>
       <option value="mid">Mid-range</option>
@@ -85,78 +96,101 @@
   </label>
 
   <fieldset>
-    <legend>Rooms to Remodel (per sqft)</legend>
+    <legend>🛋️ Rooms to Remodel (per sqft)</legend>
     <div class="room-input">
-      <label><input type="checkbox" value="kitchen" onchange="toggleInput('kitchen')"> Kitchen</label>
+      <label><input type="checkbox" value="kitchen" onchange="toggleInput('kitchen')"> 🍽️ Kitchen</label>
       <input type="number" id="kitchen_sqft" placeholder="sqft" disabled>
       <input type="number" class="custom-price" id="kitchen_price" placeholder="$/sqft (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="bathroom" onchange="toggleInput('bathroom')"> Bathroom</label>
+      <label><input type="checkbox" value="bathroom" onchange="toggleInput('bathroom')"> 🛁 Bathroom</label>
       <input type="number" id="bathroom_sqft" placeholder="sqft" disabled>
       <input type="number" class="custom-price" id="bathroom_price" placeholder="$/sqft (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="flooring" onchange="toggleInput('flooring')"> Flooring</label>
+      <label><input type="checkbox" value="flooring" onchange="toggleInput('flooring')"> 🪵 Flooring</label>
       <input type="number" id="flooring_sqft" placeholder="sqft" disabled>
       <input type="number" class="custom-price" id="flooring_price" placeholder="$/sqft (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="living" onchange="toggleInput('living')"> Living Room</label>
+      <label><input type="checkbox" value="living" onchange="toggleInput('living')"> 🛋️ Living Room</label>
       <input type="number" id="living_sqft" placeholder="sqft" disabled>
       <input type="number" class="custom-price" id="living_price" placeholder="$/sqft (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="bedroom" onchange="toggleInput('bedroom')"> Bedroom</label>
+      <label><input type="checkbox" value="bedroom" onchange="toggleInput('bedroom')"> 🛏️ Bedroom</label>
       <input type="number" id="bedroom_sqft" placeholder="sqft" disabled>
       <input type="number" class="custom-price" id="bedroom_price" placeholder="$/sqft (optional)">
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Whole-Unit Items (flat cost)</legend>
+    <legend>🔧 Whole-Unit Items (flat cost)</legend>
     <div class="room-input">
-      <label><input type="checkbox" value="roof" onchange="toggleInput('roof')"> Roof Replacement</label>
-      <input type="number" id="roof_units" placeholder="count (usually 1)" disabled>
+      <label>🏠 Roof Replacement</label>
+      <input type="number" id="roof_units" value="1">
       <input type="number" class="custom-price" id="roof_price" placeholder="$/unit (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="windows" onchange="toggleInput('windows')"> Windows</label>
-      <input type="number" id="windows_units" placeholder="# of windows" disabled>
-      <input type="number" class="custom-price" id="windows_price" placeholder="$/unit (optional)">
+      <label>💨 HVAC System</label>
+      <input type="number" id="hvac_units" value="1">
+      <input type="number" class="custom-price" id="hvac_price" placeholder="$/unit (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="waterheater" onchange="toggleInput('waterheater')"> Water Heater</label>
-      <input type="number" id="waterheater_units" placeholder="count" disabled>
+      <label>🚿 Water Heater</label>
+      <input type="number" id="waterheater_units" value="1">
       <input type="number" class="custom-price" id="waterheater_price" placeholder="$/unit (optional)">
     </div>
     <div class="room-input">
-      <label><input type="checkbox" value="hvac" onchange="toggleInput('hvac')"> HVAC</label>
-      <input type="number" id="hvac_units" placeholder="count" disabled>
-      <input type="number" class="custom-price" id="hvac_price" placeholder="$/unit (optional)">
+      <label>💡 Light Fixtures</label>
+      <input type="number" id="light_units">
+      <input type="number" class="custom-price" id="light_price" placeholder="$/unit (optional)">
+    </div>
+    <div class="room-input">
+      <label>🪞 Mirrors</label>
+      <input type="number" id="mirror_units">
+      <input type="number" class="custom-price" id="mirror_price" placeholder="$/unit (optional)">
+    </div>
+    <div class="room-input">
+      <label>🪜 Gutter Installation</label>
+      <input type="number" id="gutter_units">
+      <input type="number" class="custom-price" id="gutter_price" placeholder="$/unit (optional)">
     </div>
   </fieldset>
 
-  <button onclick="estimateCost()">Estimate Cost</button>
+  <fieldset>
+    <legend>✨ Other Custom Item</legend>
+    <input type="text" id="other_desc" placeholder="e.g., Trim trees, deck repair...">
+    <input type="number" id="other_cost" placeholder="Cost in $">
+  </fieldset>
+
+  <label>📝 Notes:
+    <textarea id="notes" rows="4" placeholder="Any notes about the house or remodel..."></textarea>
+  </label>
+
+  <button onclick="estimateCost()">🧮 Estimate Cost</button>
+  <button onclick="exportPDF()">📄 Export to PDF</button>
 
   <div class="output" id="result"></div>
 
   <script>
     const costTable = {
-      kitchen:    { basic: 120, mid: 180, high: 300 },
-      bathroom:   { basic: 110, mid: 160, high: 260 },
-      flooring:   { basic: 12,  mid: 18,  high: 30  },
-      living:     { basic: 35,  mid: 55,  high: 80  },
-      bedroom:    { basic: 35,  mid: 55,  high: 80  },
-      roof:       { basic: 9000, mid: 14000, high: 22000 },
-      windows:    { basic: 400,  mid: 700,   high: 1100 },
-      waterheater:{ basic: 1200, mid: 1800,  high: 2700 },
-      hvac:       { basic: 6000, mid: 9000,  high: 13000 },
+      kitchen: { basic: 120, mid: 180, high: 300 },
+      bathroom: { basic: 110, mid: 160, high: 260 },
+      flooring: { basic: 12, mid: 18, high: 30 },
+      living: { basic: 35, mid: 55, high: 80 },
+      bedroom: { basic: 35, mid: 55, high: 80 },
+      roof: { basic: 9000, mid: 14000, high: 22000 },
+      hvac: { basic: 6000, mid: 9000, high: 13000 },
+      waterheater: { basic: 1200, mid: 1800, high: 2700 },
+      light: { basic: 100, mid: 200, high: 400 },
+      mirror: { basic: 80, mid: 150, high: 300 },
+      gutter: { basic: 600, mid: 900, high: 1300 }
     };
 
     function toggleInput(id) {
       const checkbox = document.querySelector(`input[value='${id}']`);
-      const input = document.getElementById(`${id}_sqft`) || document.getElementById(`${id}_units`);
+      const input = document.getElementById(`${id}_sqft`);
       if (input) input.disabled = !checkbox.checked;
     }
 
@@ -169,45 +203,52 @@
 
       checkboxes.forEach(cb => {
         const item = cb.value;
-        const isPerSqft = document.getElementById(`${item}_sqft`) !== null;
-        const inputId = isPerSqft ? `${item}_sqft` : `${item}_units`;
-        const customPriceId = `${item}_price`;
-        const value = parseFloat(document.getElementById(inputId).value);
-        const customPrice = parseFloat(document.getElementById(customPriceId).value);
-
-        if (!isNaN(value) && value > 0) {
-          const rate = !isNaN(customPrice) && customPrice > 0 ? customPrice : costTable[item][finish];
-          const cost = rate * value;
+        const sqft = parseFloat(document.getElementById(`${item}_sqft`).value);
+        const customPrice = parseFloat(document.getElementById(`${item}_price`).value);
+        if (!isNaN(sqft) && sqft > 0) {
+          const rate = !isNaN(customPrice) ? customPrice : costTable[item][finish];
+          const cost = sqft * rate;
           total += cost;
-          const entry = `${item.charAt(0).toUpperCase() + item.slice(1)}: $${cost.toLocaleString()} (${value} ${isPerSqft ? 'sqft' : 'unit(s)'}, $${rate}/unit)`;
-          if (isPerSqft) {
-            roomBreakdown.push(entry);
-          } else {
-            systemBreakdown.push(entry);
-          }
-        } else {
-          const warning = `${item.charAt(0).toUpperCase() + item.slice(1)}: ⚠️ Please enter valid amount`;
-          if (isPerSqft) {
-            roomBreakdown.push(warning);
-          } else {
-            systemBreakdown.push(warning);
-          }
+          roomBreakdown.push(`${item.charAt(0).toUpperCase() + item.slice(1)}: $${cost.toLocaleString()} (${sqft} sqft @ $${rate})`);
         }
       });
 
-      const resultDiv = document.getElementById("result");
-      if (checkboxes.length === 0) {
-        resultDiv.innerHTML = "<strong>Please select at least one item.</strong>";
-        return;
+      const systems = ["roof", "hvac", "waterheater", "light", "mirror", "gutter"];
+      systems.forEach(item => {
+        const units = parseFloat(document.getElementById(`${item}_units`).value);
+        const customPrice = parseFloat(document.getElementById(`${item}_price`).value);
+        if (!isNaN(units) && units > 0) {
+          const rate = !isNaN(customPrice) ? customPrice : costTable[item][finish];
+          const cost = units * rate;
+          total += cost;
+          systemBreakdown.push(`${item.charAt(0).toUpperCase() + item.slice(1)}: $${cost.toLocaleString()} (${units} unit(s) @ $${rate})`);
+        }
+      });
+
+      const otherDesc = document.getElementById("other_desc").value.trim();
+      const otherCost = parseFloat(document.getElementById("other_cost").value);
+      if (otherDesc && !isNaN(otherCost)) {
+        total += otherCost;
+        systemBreakdown.push(`Other – ${otherDesc}: $${otherCost.toLocaleString()}`);
       }
 
-      resultDiv.innerHTML = `<strong>Total Estimated Cost: $${total.toLocaleString()}</strong><br><br>`;
-      if (roomBreakdown.length > 0) {
-        resultDiv.innerHTML += `<u>Room-Based Remodels:</u><br>${roomBreakdown.join("<br>")}<br><br>`;
-      }
-      if (systemBreakdown.length > 0) {
-        resultDiv.innerHTML += `<u>Whole-System Replacements:</u><br>${systemBreakdown.join("<br>")}`;
-      }
+      const result = [`📍 Address: ${document.getElementById("address").value}`, `📮 ZIP: ${document.getElementById("zip").value}`, `🎨 Finish Level: ${finish}`, `💰 Total Estimated Cost: $${total.toLocaleString()}`];
+      if (roomBreakdown.length) result.push(`\n🛋️ Room Remodels:\n${roomBreakdown.join('\n')}`);
+      if (systemBreakdown.length) result.push(`\n🔧 Systems:\n${systemBreakdown.join('\n')}`);
+      const notes = document.getElementById("notes").value.trim();
+      if (notes) result.push(`\n📝 Notes:\n${notes}`);
+
+      document.getElementById("result").textContent = result.join('\n\n');
+    }
+
+    function exportPDF() {
+      estimateCost();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const resultText = document.getElementById("result").textContent;
+      const lines = doc.splitTextToSize(resultText, 180);
+      doc.text(lines, 10, 10);
+      doc.save("remodel_estimate.pdf");
     }
   </script>
 </body>
