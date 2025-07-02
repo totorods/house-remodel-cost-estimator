@@ -169,7 +169,7 @@
   </label>
 
   <button onclick="estimateCost()">🧮 Estimate Cost</button>
-  <button onclick="exportPDF()">📄 Export to PDF</button>
+  <button onclick="generatePDF()">📄 Export to PDF</button>
 
   <div class="output" id="result"></div>
 
@@ -241,15 +241,63 @@
       document.getElementById("result").textContent = result.join('\n\n');
     }
 
-    function exportPDF() {
-      estimateCost();
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const resultText = document.getElementById("result").textContent;
-      const lines = doc.splitTextToSize(resultText, 180);
-      doc.text(lines, 10, 10);
-      doc.save("remodel_estimate.pdf");
+    async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const address = document.getElementById("address").value;
+  const zip = document.getElementById("zip").value;
+  const finish = document.getElementById("finish").value;
+  const notes = document.getElementById("notes").value;
+  const result = document.getElementById("result").innerText;
+
+  let y = 10;
+  doc.setFont("helvetica");
+  doc.setFontSize(16);
+  doc.text("House Remodel Estimate", 10, y);
+  y += 10;
+
+  doc.setFontSize(12);
+  if (address) { doc.text(`Address: ${address}`, 10, y); y += 8; }
+  if (zip) { doc.text(`ZIP Code: ${zip}`, 10, y); y += 8; }
+  doc.text(`Finish Level: ${finish}`, 10, y); y += 10;
+
+  const photoFile = document.getElementById("photo").files[0];
+
+  function writeContent() {
+    const lines = result.split("\n");
+    lines.forEach(line => {
+      doc.text(line, 10, y);
+      y += 8;
+    });
+
+    if (notes) {
+      y += 5;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(11);
+      doc.text("Notes:", 10, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      const wrapped = doc.splitTextToSize(notes, 180);
+      doc.text(wrapped, 10, y);
     }
+
+    doc.save("house_remodel_estimate.pdf");
+  }
+
+  if (photoFile) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const imgData = e.target.result;
+      doc.addImage(imgData, 'JPEG', 10, y, 60, 45);
+      y += 55;
+      writeContent();
+    };
+    reader.readAsDataURL(photoFile);
+  } else {
+    writeContent();
+  }
+}
   </script>
 </body>
 </html>
